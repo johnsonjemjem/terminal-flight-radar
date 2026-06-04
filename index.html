@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terminal Flight GEM 💎 — Real-Time Flight Tracker</title>
+  <meta name="description" content="A terminal-style real-time flight tracker. Enter a flight number to get live status, position, altitude, speed, and route information." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-left">
+      <span class="topbar-logo">✦ TERMINAL FLIGHT GEM 💎</span>
+      <span class="topbar-sep">|</span>
+      <span class="topbar-version">v2.0.6</span>
+    </div>
+    <div class="topbar-center">
+      <span class="blink-dot"></span>
+      <span id="status-label" class="status-text">SYSTEM ONLINE</span>
+    </div>
+    <div class="topbar-right">
+      <span id="date-display" class="topbar-date"></span>
+      <span class="topbar-sep">|</span>
+      <span id="clock" class="topbar-clock"></span>
+      <span class="topbar-sep">|</span>
+      <span class="topbar-tz">JST</span>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <main class="workspace" role="main">
+
+    <!-- LEFT PANEL: Input Terminal -->
+    <section class="panel panel-left" aria-label="Command input terminal">
+      <div class="panel-header">
+        <span class="panel-dot red"></span>
+        <span class="panel-dot yellow"></span>
+        <span class="panel-dot green"></span>
+        <span class="panel-title">INPUT TERMINAL</span>
+        <span class="panel-pid">PID:3847</span>
+      </div>
+
+      <div class="terminal-body" id="left-terminal">
+        <!-- Drag & Drop overlay -->
+        <div class="drag-overlay" id="drag-overlay">
+          <div class="drag-overlay-inner">
+            <span class="drag-icon">📥</span>
+            <span class="drag-title">DROP ROUTING JSON HERE</span>
+            <span class="drag-sub">Supports operational plans (.json)</span>
+          </div>
+        </div>
+
+        <div class="boot-sequence" id="boot-seq">
+          <p class="boot-line" style="--d:0ms">Initializing Terminal Flight GEM 💎...</p>
+          <p class="boot-line" style="--d:200ms">Loading ICAO/IATA databases... <span class="ok">OK</span></p>
+          <p class="boot-line" style="--d:400ms">Connecting to ADS-B network... <span class="ok">OK</span></p>
+          <p class="boot-line" style="--d:600ms">OpenSky Network interface... <span class="ok">OK</span></p>
+          <p class="boot-line" style="--d:800ms">Aviation Edge interface... <span class="ok">OK</span></p>
+          <p class="boot-line" style="--d:1000ms">System ready. <span class="ok blink-text">█</span></p>
+        </div>
+
+        <div class="cmd-history" id="cmd-history" role="log" aria-live="polite" aria-label="Command history"></div>
+
+        <div class="input-row">
+          <span class="prompt">root@radar:~$</span>
+          <span class="prompt-cmd">track</span>
+          <input
+            type="text"
+            id="flight-input"
+            class="flight-input"
+            placeholder="AA169"
+            maxlength="10"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            aria-label="Enter flight number"
+          />
+        </div>
+
+        <div class="btn-row">
+          <button id="track-btn" class="btn btn-primary" aria-label="Track flight">
+            <span class="btn-icon">▶</span> EXECUTE
+          </button>
+          <button id="refresh-btn" class="btn btn-secondary" aria-label="Refresh current flight data" disabled>
+            <span class="btn-icon spin-icon" id="refresh-icon">↻</span> REFRESH
+          </button>
+          <button id="clear-btn" class="btn btn-danger" aria-label="Clear terminal">
+            <span class="btn-icon">✕</span> CLEAR
+          </button>
+        </div>
+
+        <div class="quick-cmds">
+          <span class="quick-label">QUICK TRACK — HND ROUTES</span>
+          <div class="quick-pairs">
+            <div class="quick-pair-row">
+              <span class="quick-pair-label">LAX↔HND</span>
+              <button class="quick-btn" data-flight="AA169">AA169</button>
+              <button class="quick-btn" data-flight="AA170">AA170</button>
+            </div>
+            <div class="quick-pair-row">
+              <span class="quick-pair-label">DFW↔HND</span>
+              <button class="quick-btn" data-flight="AA175">AA175</button>
+              <button class="quick-btn" data-flight="AA176">AA176</button>
+            </div>
+            <div class="quick-pair-row">
+              <span class="quick-pair-label">JFK↔HND</span>
+              <button class="quick-btn" data-flight="AA167">AA167</button>
+              <button class="quick-btn" data-flight="AA168">AA168</button>
+            </div>
+            <div class="quick-pair-row">
+              <span class="quick-pair-label">EXTRA↔HND</span>
+              <button class="quick-btn" data-flight="AA9603">AA9603</button>
+              <button class="quick-btn" data-flight="AA26">AA26</button>
+            </div>
+            <div class="quick-pair-row">
+              <span class="quick-pair-label">LAX↔FERRY</span>
+              <button class="quick-btn" data-flight="AA27">AA27</button>
+              <button class="quick-btn" data-flight="AA9600">AA9600</button>
+            </div>
+          </div>
+        </div>
+
+
+
+
+        <div class="auto-refresh-row">
+          <label class="toggle-label" for="auto-refresh-toggle">
+            <span class="toggle-text">AUTO-REFRESH</span>
+            <input type="checkbox" id="auto-refresh-toggle" class="toggle-check" aria-label="Enable auto refresh every 30 seconds" />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-interval">every <strong>30s</strong></span>
+        </div>
+
+        <div class="system-stats">
+          <div class="stat-row">
+            <span class="stat-key">LAST QUERY</span>
+            <span class="stat-val" id="stat-last-query">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">QUERIES TODAY</span>
+            <span class="stat-val" id="stat-queries">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">API STATUS</span>
+            <span class="stat-val green-text" id="stat-api">NOMINAL</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">DATA SOURCE</span>
+            <span class="stat-val" id="stat-source">ADS-B / OpenSky</span>
+          </div>
+        </div>
+        
+        <!-- Le Wagon Tokyo Neon Sign Box -->
+        <div class="wagon-neon-box">
+          <div class="wagon-neon-wrapper">
+            <img src="le_wagon_neon.png" alt="Le Wagon Tokyo Neon Logo" class="wagon-neon-img" />
+            <!-- Flickering Overlays -->
+            <div class="flicker-overlay wheel-left"></div>
+            <div class="flicker-overlay wheel-right"></div>
+            <div class="flicker-overlay window-green"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Output Display -->
+    <section class="panel panel-right" aria-label="Flight data output">
+      <div class="panel-header">
+        <span class="panel-dot red"></span>
+        <span class="panel-dot yellow"></span>
+        <span class="panel-dot green"></span>
+        <span class="panel-title">FLIGHT DATA OUTPUT</span>
+        <span class="panel-pid" id="output-flight-id">AWAITING INPUT</span>
+      </div>
+
+      <div class="output-body" id="output-body">
+        <!-- Idle splash -->
+        <div class="splash" id="splash">
+          <div class="splash-radar">
+            <div class="radar-ring r1"></div>
+            <div class="radar-ring r2"></div>
+            <div class="radar-ring r3"></div>
+            <div class="radar-sweep"></div>
+            <div class="radar-center">✈</div>
+          </div>
+          <p class="splash-title">TERMINAL FLIGHT GEM 💎</p>
+          <p class="splash-sub">Enter a flight number in the left terminal<br/>to begin real-time tracking</p>
+          <p class="splash-hint"><code>AA169</code>/<code>AA170</code> · <code>AA175</code>/<code>AA176</code> · <code>AA167</code>/<code>AA26</code> · <code>AA27</code>/<code>AA168</code></p>
+        </div>
+
+        <!-- Flight result (hidden initially) -->
+        <div class="flight-result hidden" id="flight-result">
+          <div class="result-stream" id="result-stream" role="log" aria-live="polite" aria-label="Flight data output"></div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div class="loading-overlay hidden" id="loading-overlay" aria-live="assertive" aria-label="Loading flight data">
+          <div class="loading-inner">
+            <div class="loading-bar-wrap">
+              <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <p class="loading-text" id="loading-text">Querying ADS-B network...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map strip -->
+      <div class="map-strip" id="map-strip" aria-label="Route map placeholder">
+        <div class="map-label">ROUTE MAP — ADS-B TRACK</div>
+        <canvas id="route-canvas" class="route-canvas" width="800" height="90" aria-label="Flight route visualization"></canvas>
+      </div>
+    </section>
+
+    <!-- AUX PANEL: Operations Control -->
+    <section class="panel panel-aux" aria-label="Auxiliary operations panel">
+      <div class="panel-header">
+        <span class="panel-dot red"></span>
+        <span class="panel-dot yellow"></span>
+        <span class="panel-dot green"></span>
+        <span class="panel-title">OPERATIONS AUXILIARY</span>
+        <span class="panel-pid">PID:5092</span>
+      </div>
+
+      <div class="aux-body">
+        <!-- Card 1: Current Weather Operations -->
+        <div class="aux-card">
+          <div class="card-header">🌦️ WEATHER STATION</div>
+          <div class="card-body" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- City tabs -->
+            <div class="wx-tabs">
+              <button class="wx-tab active" data-city="HND">TOKYO</button>
+              <button class="wx-tab" data-city="MNL">MANILA</button>
+              <button class="wx-tab" data-city="LAX">LAX</button>
+              <button class="wx-tab" data-city="KTM">KATHMANDU</button>
+              <button class="wx-tab" data-city="LHR">LONDON</button>
+              <button class="wx-tab" data-city="CDG">PARIS</button>
+            </div>
+
+            <div class="weather-info-box" style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(57, 255, 126, 0.08); padding: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 6px; position: relative;">
+              <!-- Dynamic Weather Icon in the upper-right of the info box -->
+              <span id="wx-icon" style="position: absolute; top: 8px; right: 8px; font-size: 24px; text-shadow: 0 0 10px rgba(57, 255, 126, 0.25);">☀️</span>
+
+              <div class="metar-row">
+                <span id="wx-city-name" class="metar-airport" style="font-size: 10px; font-weight: bold; color: var(--cyan);">RJTT (TOKYO HANEDA)</span>
+              </div>
+
+              <div class="weather-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 10px; width: 100%;">
+                <div class="wx-item" style="grid-column: span 2;"><span class="wx-label" style="color: var(--text-dim);">WEATHER:</span> <span id="wx-sky" style="color: var(--cyan);">CLEAR SKY</span></div>
+                <div class="wx-item"><span class="wx-label" style="color: var(--text-dim);">TEMP:</span> <span id="wx-temp" style="color: var(--cyan);">22°C (72°F)</span></div>
+                <div class="wx-item"><span class="wx-label" style="color: var(--text-dim);">WIND:</span> <span id="wx-wind" style="color: var(--cyan);">180° @ 12 KT (SSE)</span></div>
+                <div class="wx-item"><span class="wx-label" style="color: var(--text-dim);">SUNRISE:</span> <span id="wx-sunrise" style="color: var(--cyan);">04:50 AM</span></div>
+                <div class="wx-item"><span class="wx-label" style="color: var(--text-dim);">SUNSET:</span> <span id="wx-sunset" style="color: var(--cyan);">06:55 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Radar Sweep Settings -->
+        <div class="aux-card">
+          <div class="card-header">📡 RADAR SCANNER</div>
+          <div class="card-body" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="control-row">
+              <span class="control-label">RADAR SWEEP</span>
+              <label class="toggle-label mini" for="radar-sweep-toggle" style="margin: 0;">
+                <input type="checkbox" id="radar-sweep-toggle" class="toggle-check" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="control-row">
+              <span class="control-label">SWEEP SPEED</span>
+              <input type="range" id="radar-speed-slider" class="range-slider" min="1" max="5" value="2" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Audio Deck -->
+        <div class="aux-card">
+          <div class="card-header">🔊 AUDIO FX DECK</div>
+          <div class="card-body" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="control-row">
+              <span class="control-label">SOUND FX</span>
+              <label class="toggle-label mini" for="sound-toggle" style="margin: 0;">
+                <input type="checkbox" id="sound-toggle" class="toggle-check" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="control-row">
+              <span class="control-label">VOLUME</span>
+              <input type="range" id="volume-slider" class="range-slider" min="1" max="10" value="3" />
+            </div>
+            <div class="sound-test-row">
+              <button class="sound-btn" data-sound="click">KEY</button>
+              <button class="sound-btn" data-sound="chime">CHIME</button>
+              <button class="sound-btn" data-sound="alert">WARN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Presentation Autoplay -->
+        <div class="aux-card no-border">
+          <div class="card-header">🤖 PRESENTATION PLAYBACK</div>
+          <div class="card-body">
+            <p class="card-desc" style="margin-bottom: 8px;">Automatically demonstrates a live operational routing drop & search sequence.</p>
+            <button id="autoplay-btn" class="btn btn-primary btn-full">▶ AUTOPLAY DEMO</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer status bar -->
+  <footer class="statusbar" role="contentinfo">
+    <span class="sb-item"><span class="sb-key">SYS</span> <span class="sb-val green-text">ONLINE</span></span>
+    <span class="sb-sep">|</span>
+    <span class="sb-item"><span class="sb-key">NET</span> <span class="sb-val green-text" id="sb-net">CONNECTED</span></span>
+    <span class="sb-sep">|</span>
+    <span class="sb-item"><span class="sb-key">DATA</span> <span class="sb-val" id="sb-data">—</span></span>
+    <span class="sb-sep">|</span>
+    <span class="sb-item"><span class="sb-key">MEM</span> <span class="sb-val" id="sb-mem">—</span></span>
+    <span class="sb-sep">|</span>
+    <span class="sb-item sb-right"><span class="sb-key">SOURCE</span> <span class="sb-val">OPENSKY NETWORK + AVIATIONSTACK</span></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

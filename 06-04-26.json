@@ -1,0 +1,90 @@
+{
+  "date": "2026-06-04",
+  "airport": "HND/NRT",
+  "routings": [
+    {
+      "arrival": "169",
+      "sta": "04:45",
+      "eta": "IN",
+      "ac_type": "B789",
+      "nose": "8LY",
+      "arv_spot": "110",
+      "tow_to": "153",
+      "dep_spot": "144",
+      "departure": "170",
+      "std": "11:55",
+      "etd": "-",
+      "remarks": "AA170 TOW IN AT 1000L"
+    },
+    {
+      "arrival": "175",
+      "sta": "14:20",
+      "eta": "15:18",
+      "ac_type": "B773",
+      "nose": "7LT",
+      "arv_spot": "102",
+      "tow_to": "STAY",
+      "dep_spot": "102",
+      "departure": "176",
+      "std": "16:30",
+      "etd": "17:00",
+      "remarks": "AA175 DLY DUE MAINTENANCE"
+    },
+    {
+      "arrival": "167",
+      "sta": "13:55",
+      "eta": "13:21",
+      "ac_type": "B789",
+      "nose": "8LE",
+      "arv_spot": "147",
+      "tow_to": "STAY",
+      "dep_spot": "147",
+      "departure": "168",
+      "std": "17:45",
+      "etd": "-",
+      "remarks": ""
+    },
+    {
+      "arrival": "9603",
+      "sta": "06:10",
+      "eta": "IN",
+      "ac_type": "B789",
+      "nose": "8LD",
+      "arv_spot": "121",
+      "tow_to": "901",
+      "dep_spot": "132",
+      "departure": "26",
+      "std": "19:45",
+      "etd": "-",
+      "remarks": "AA26 SPOT CHGD TO 132. TOW IN AT1745L."
+    },
+    {
+      "arrival": "27",
+      "sta": "15:50",
+      "eta": "19:19",
+      "ac_type": "B789",
+      "nose": "8LH",
+      "arv_spot": "147",
+      "tow_to": "153",
+      "dep_spot": "114",
+      "departure": "9600",
+      "std": "22:00",
+      "etd": "-",
+      "remarks": "AA27 DLY DUE MAINTENANCE / AA27-9600 SPOT ARRBGING NOW. PLZ WAIT NEXT INFOMATION."
+    },
+    {
+      "arrival": "61",
+      "sta": "15:30",
+      "eta": "14:07",
+      "ac_type": "B772",
+      "nose": "7BB",
+      "arv_spot": "-",
+      "tow_to": "-",
+      "dep_spot": "-",
+      "departure": "60",
+      "std": "18:30",
+      "etd": "-",
+      "remarks": ""
+    }
+  ]
+}
