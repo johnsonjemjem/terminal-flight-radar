@@ -1665,3 +1665,149 @@ if (document.readyState === 'loading') {
 } else {
   setupMobileTabs();
 }
+
+/* ══════════════════════════════════════════════
+   PULL TO REFRESH SYSTEM
+   ══════════════════════════════════════════════ */
+// Pulling down to 12 parsecs, Chewie! 🚀 Millennium Falcon speed refresh activated.
+function setupPullToRefresh() {
+  const container = document.body;
+  const indicator = $('pull-refresh-indicator');
+  const icon = indicator ? indicator.querySelector('.pull-refresh-icon') : null;
+  const text = indicator ? indicator.querySelector('#pull-refresh-text') : null;
+
+  if (!indicator) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let pullDistance = 0;
+  let isPulling = false;
+  const threshold = 65; // px pull needed to trigger
+  const maxPull = 100; // max distance visual pull
+
+  container.addEventListener('touchstart', (e) => {
+    // Only allow pull to refresh on mobile screen layout
+    if (window.innerWidth > 900) return;
+    
+    // Check if the current active panel content body is at the very top of its scroll
+    const activePanelBody = document.querySelector('.panel.active .terminal-body, .panel.active .output-body, .panel.active .aux-body');
+    const scrollTop = activePanelBody ? activePanelBody.scrollTop : 0;
+    
+    if (scrollTop <= 0) {
+      startY = e.touches[0].pageY;
+      isPulling = true;
+      indicator.classList.remove('release');
+      indicator.style.transition = 'none';
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!isPulling) return;
+    
+    currentY = e.touches[0].pageY;
+    const diff = currentY - startY;
+
+    if (diff > 0) {
+      // Apply exponential resistance to the pull
+      pullDistance = Math.min(maxPull, diff * 0.4);
+      
+      // Show and slide down the indicator
+      indicator.style.display = 'flex';
+      indicator.classList.add('visible');
+      indicator.style.transform = `translateY(${pullDistance - 50}px)`; // Start hidden offset by height (50px)
+      
+      // Rotate refresh icon based on distance
+      if (icon) {
+        icon.style.transform = `rotate(${pullDistance * 4}deg)`;
+      }
+
+      if (text) {
+        if (pullDistance >= threshold) {
+          text.textContent = "RELEASE TO DISPATCH SYSTEM SCAN";
+          text.style.color = 'var(--green-bright)';
+        } else {
+          text.textContent = "PULL TO SCAN SKY";
+          text.style.color = 'var(--ruby-bright)';
+        }
+      }
+
+      // Prevent default pull-to-refresh of Chrome/Safari if user drags down significantly
+      if (diff > 10 && e.cancelable) {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', () => {
+    if (!isPulling) return;
+    isPulling = false;
+
+    if (pullDistance >= threshold) {
+      // Trigger refresh sequence!
+      indicator.classList.add('release');
+      indicator.style.transition = 'transform 0.3s ease';
+      indicator.style.transform = `translateY(0px)`; // Stay at top bar level
+      if (text) {
+        text.textContent = "SCANNING SKY TELEMETRY...";
+        text.style.color = 'var(--green-bright)';
+      }
+
+      // Trigger the refresh action
+      executePullRefreshAction();
+    } else {
+      // Cancel pull
+      resetPullIndicator();
+    }
+  });
+
+  function resetPullIndicator() {
+    indicator.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    indicator.style.transform = 'translateY(-100%)';
+    indicator.classList.remove('visible', 'release');
+    pullDistance = 0;
+  }
+
+  function executePullRefreshAction() {
+    // Play chime sound FX
+    if (typeof playChimeSound === 'function') {
+      playChimeSound();
+    }
+
+    setTimeout(() => {
+      // If a flight is currently tracked, reload it. Otherwise trigger metar reload
+      if (state.currentFlight) {
+        trackFlight(state.currentFlight);
+      } else {
+        // Just trigger boot sequence prints or reload current weather
+        if (typeof refreshWeather === 'function') {
+          refreshWeather();
+        }
+        
+        // Print message to terminal history
+        const lines = [
+          { type: 'blank' },
+          { type: 'header', raw: '┌─ 🛸 PILOT INITIATED SCAN ────────────────────────────┐' },
+          { type: 'header', raw: '│  Re-scanning ADS-B receivers and weather ports...    │' },
+          { type: 'header', raw: '└──────────────────────────────────────────────────────┘' }
+        ];
+        if (typeof schedulePrint === 'function') {
+          schedulePrint(lines);
+        }
+      }
+
+      // Hide indicator smoothly after a delay
+      setTimeout(() => {
+        resetPullIndicator();
+      }, 1000);
+
+    }, 800);
+  }
+}
+
+// Bind mobile pull to refresh controller
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupPullToRefresh);
+} else {
+  setupPullToRefresh();
+}

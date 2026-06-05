@@ -1236,5 +1236,41 @@ body {
   .statusbar .sb-sep, .statusbar .sb-right {
     display: none;
   }
+
+  /* Pull to Refresh Indicator Container */
+  .pull-refresh {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    display: none; /* toggled by JS touch handlers */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--ruby-border);
+    color: var(--ruby-bright);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    transform: translateY(-100%);
+    z-index: 99;
+    opacity: 0;
+  }
+
+  .pull-refresh.visible {
+    opacity: 1;
+  }
+
+  .pull-refresh-icon {
+    font-size: 14px;
+    transition: transform 0.1s linear;
+    display: inline-block;
+  }
+
+  .pull-refresh.release .pull-refresh-icon {
+    animation: spin 0.8s linear infinite;
+  }
 }
 
