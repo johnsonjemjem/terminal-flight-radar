@@ -1223,8 +1223,17 @@ window.clearPlan = function() {
 };
 
 /* ══════════════════════════════════════════════
-   WEATHER MODULE
-══════════════════════════════════════════════ */
+   WEATHER MODULE (LIVE WEATHER API)
+   ══════════════════════════════════════════════ */
+const AIRPORT_COORDINATES = {
+  HND: { lat: 35.5494, lon: 139.7798, name: "RJTT (TOKYO HANEDA)" },
+  MNL: { lat: 14.5086, lon: 121.0194, name: "RPLL (MANILA INTL)" },
+  LAX: { lat: 33.9416, lon: -118.4085, name: "KLAX (LOS ANGELES INTL)" },
+  KTM: { lat: 27.6977, lon: 85.3588, name: "VNKT (KATHMANDU INTL)" },
+  LHR: { lat: 51.4700, lon: -0.4543, name: "EGLL (LONDON HEATHROW)" },
+  CDG: { lat: 49.0097, lon: 2.5479, name: "LFPG (PARIS CHARLES DE GAULLE)" }
+};
+
 const CITY_WEATHER_DATABASE = {
   HND: { name: "RJTT (TOKYO HANEDA)", temp: "22°C (72°F)", wind: "SOUTH-SOUTHEAST @ 12 KT", sky: "CLEAR SKY", sunrise: "04:50 AM", sunset: "06:55 PM", icon: "☀️" },
   MNL: { name: "RPLL (MANILA INTL)", temp: "28°C (82°F)", wind: "EAST-SOUTHEAST @ 14 KT", sky: "POURING WATER (HEAVY THUNDERSTORM)", sunrise: "05:25 AM", sunset: "06:20 PM", icon: "🌧️" },
@@ -1234,9 +1243,76 @@ const CITY_WEATHER_DATABASE = {
   CDG: { name: "LFPG (PARIS CHARLES DE GAULLE)", temp: "18°C (64°F)", wind: "SOUTH-SOUTHWEST @ 14 KT", sky: "POURING WATER (LIGHT RAIN)", sunrise: "05:45 AM", sunset: "09:50 PM", icon: "🌧️" }
 };
 
-function refreshWeather() {
-  const report = CITY_WEATHER_DATABASE[state.activeWeatherCity || 'HND'];
-  if (!report) return;
+async function refreshWeather() {
+  const cityCode = state.activeWeatherCity || 'HND';
+  const coords = AIRPORT_COORDINATES[cityCode];
+  const cityNameEl = $('wx-city-name');
+  
+  if (!coords) return;
+  if (cityNameEl) cityNameEl.textContent = `${coords.name} // FETCHING METAR...`;
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day&timezone=auto`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    
+    const data = await res.json();
+    const current = data.current;
+
+    const weatherMapping = {
+      0: { text: "CLEAR SKY", icon: current.is_day ? "☀️" : "🌙" },
+      1: { text: "MAINLY CLEAR", icon: current.is_day ? "🌤️" : "🌙" },
+      2: { text: "PARTLY CLOUDY", icon: "⛅" },
+      3: { text: "OVERCAST", icon: "☁️" },
+      45: { text: "FOGGY", icon: "🌫️" },
+      48: { text: "RIME FOG", icon: "🌫️" },
+      51: { text: "LIGHT DRIZZLE", icon: "🌦️" },
+      53: { text: "MODERATE DRIZZLE", icon: "🌦️" },
+      55: { text: "HEAVY DRIZZLE", icon: "🌧️" },
+      61: { text: "LIGHT RAIN", icon: "🌧️" },
+      63: { text: "MODERATE RAIN", icon: "🌧️" },
+      65: { text: "HEAVY RAIN", icon: "🌧️" },
+      71: { text: "LIGHT SNOW", icon: "❄️" },
+      73: { text: "MODERATE SNOW", icon: "❄️" },
+      75: { text: "HEAVY SNOW", icon: "❄️" },
+      80: { text: "LIGHT RAIN SHOWERS", icon: "🌧️" },
+      81: { text: "MODERATE RAIN SHOWERS", icon: "🌧️" },
+      82: { text: "VIOLENT RAIN SHOWERS", icon: "⛈️" },
+      95: { text: "THUNDERSTORM", icon: "⛈️" },
+      96: { text: "THUNDERSTORM WITH HAIL", icon: "⛈️" },
+      99: { text: "HEAVY THUNDERSTORM", icon: "⛈️" }
+    };
+
+    const mapping = weatherMapping[current.weather_code] || { text: `CODE ${current.weather_code}`, icon: "🌡️" };
+    const tempC = Math.round(current.temperature_2m);
+    const tempF = Math.round(tempC * 1.8 + 32);
+
+    const windDirDeg = current.wind_direction_10m;
+    const windSpeedKt = Math.round(current.wind_speed_10m * 0.539957);
+    const windDirections = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    const windDirStr = windDirections[Math.round(windDirDeg / 22.5) % 16];
+
+    const staticReport = CITY_WEATHER_DATABASE[cityCode];
+
+    const report = {
+      name: coords.name,
+      temp: `${tempC}°C (${tempF}°F)`,
+      wind: `${windDirDeg}° @ ${windSpeedKt} KT (${windDirStr})`,
+      sky: mapping.text,
+      sunrise: staticReport.sunrise,
+      sunset: staticReport.sunset,
+      icon: mapping.icon
+    };
+
+    applyWeatherReport(report);
+  } catch (err) {
+    console.warn("Live weather fetch failed, falling back to static database:", err);
+    const staticReport = CITY_WEATHER_DATABASE[cityCode];
+    if (staticReport) applyWeatherReport(staticReport);
+  }
+}
+
+function applyWeatherReport(report) {
   const elements = { 'wx-city-name': 'name', 'wx-temp': 'temp', 'wx-wind': 'wind', 'wx-sky': 'sky', 'wx-sunrise': 'sunrise', 'wx-sunset': 'sunset', 'wx-icon': 'icon' };
   Object.keys(elements).forEach(id => {
     const el = $(id);
