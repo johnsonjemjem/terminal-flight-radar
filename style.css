@@ -1081,3 +1081,160 @@ body {
   box-shadow: 0 0 8px var(--ruby-glow);
 }
 
+/* ══════════════════════════════════════════════
+   MOBILE / RESPONSIVE STYLES
+   ══════════════════════════════════════════════ */
+.mobile-tabs-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Compact top bar for mobile screen constraints */
+  .topbar {
+    height: auto;
+    min-height: auto;
+    padding: 8px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .topbar-logo {
+    font-size: 11px;
+  }
+  .topbar-version, .topbar-sep, .topbar-tz, .topbar-date {
+    display: none;
+  }
+  .topbar-center {
+    justify-content: flex-start;
+    flex: none;
+    order: 3;
+    width: 100%;
+    margin-top: 2px;
+  }
+  .topbar-right {
+    margin-left: auto;
+    gap: 4px;
+  }
+
+  /* Workspace fills the remaining center area */
+  .workspace {
+    display: block;
+    flex: 1;
+    height: calc(100% - var(--topbar-h) - var(--statusbar-h) - 56px);
+    overflow: hidden;
+    position: relative;
+    width: 100vw;
+  }
+
+  /* Lock all panels as full screen, showing only the active tab */
+  .panel {
+    display: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    border-right: none !important;
+    border-left: none !important;
+  }
+
+  .panel.active {
+    display: flex !important;
+  }
+
+  .panel-aux {
+    background: var(--bg-panel);
+  }
+
+  /* Bottom Tab Navigation Bar */
+  .mobile-tabs-nav {
+    display: flex;
+    height: 56px;
+    background: var(--bg-header);
+    border-top: 1px solid var(--ruby-border);
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  .m-tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    padding: 4px 0;
+  }
+
+  .m-tab-btn:hover {
+    background: rgba(255, 45, 107, 0.03);
+  }
+
+  .m-tab-btn.active {
+    color: var(--ruby-bright);
+    background: rgba(255, 45, 107, 0.05);
+    border-bottom: 2px solid var(--ruby-bright);
+    text-shadow: 0 0 8px var(--ruby-mid);
+  }
+
+  .m-tab-icon {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  /* Scale neon box to prevent clipping in input screen */
+  .wagon-neon-box {
+    height: auto !important;
+    max-height: 200px !important;
+    padding: 4px;
+    margin-top: 4px;
+  }
+  .wagon-neon-wrapper {
+    width: 100%;
+    height: 100%;
+    max-width: 180px;
+    max-height: 180px;
+  }
+
+  /* Map canvas is scrollable horizontally so detail remains sharp */
+  .map-strip {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .route-canvas {
+    min-width: 800px;
+    width: 800px;
+  }
+
+  /* Result screen sizing overrides */
+  .result-stream {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .terminal-body {
+    padding: 10px;
+  }
+  
+  /* Statusbar responsive layout */
+  .statusbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 6px 12px;
+    gap: 4px;
+  }
+  .statusbar .sb-sep, .statusbar .sb-right {
+    display: none;
+  }
+}
+

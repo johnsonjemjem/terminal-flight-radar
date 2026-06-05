@@ -956,6 +956,12 @@ function renderDailyOverview(dateStr) {
 async function trackFlight(rawInput) {
   const cleaned = rawInput.trim();
   if (!cleaned || state.isLoading) return;
+
+  // Auto-switch mobile tab to RADAR output panel
+  if (typeof window.switchMobileTab === 'function') {
+    window.switchMobileTab('right');
+  }
+
   state.isLoading = true;
   state.currentFlight = cleaned;
 
@@ -1523,3 +1529,63 @@ function animateRadarSweep() {
   requestAnimationFrame(animateRadarSweep);
 }
 animateRadarSweep();
+
+/* ══════════════════════════════════════════════
+   MOBILE TABS CONTROLLER
+   ══════════════════════════════════════════════ */
+function setupMobileTabs() {
+  const tabBtns = document.querySelectorAll('.m-tab-btn');
+  const panels = {
+    left: document.querySelector('.panel-left'),
+    right: document.querySelector('.panel-right'),
+    aux: document.querySelector('.panel-aux')
+  };
+
+  // Sync initial state based on active button
+  const activeBtn = document.querySelector('.m-tab-btn.active');
+  if (activeBtn) {
+    const target = activeBtn.dataset.target;
+    Object.keys(panels).forEach(key => {
+      if (panels[key]) {
+        panels[key].classList.toggle('active', key === target);
+      }
+    });
+  }
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      
+      // Update active button classes
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Update active panel classes
+      Object.keys(panels).forEach(key => {
+        if (panels[key]) {
+          panels[key].classList.toggle('active', key === target);
+        }
+      });
+
+      // Play click sound if volume/FX is enabled
+      if (typeof playClickSound === 'function') {
+        playClickSound();
+      }
+    });
+  });
+
+  // Global helper to switch tabs programmatically
+  window.switchMobileTab = function(target) {
+    const targetBtn = document.querySelector(`.m-tab-btn[data-target="${target}"]`);
+    if (targetBtn) {
+      targetBtn.click();
+    }
+  };
+}
+
+// Bind mobile tabs controller
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupMobileTabs);
+} else {
+  setupMobileTabs();
+}

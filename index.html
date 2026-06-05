@@ -36,7 +36,7 @@
   <main class="workspace" role="main">
 
     <!-- LEFT PANEL: Input Terminal -->
-    <section class="panel panel-left" aria-label="Command input terminal">
+    <section class="panel panel-left active" aria-label="Command input terminal">
       <div class="panel-header">
         <span class="panel-dot red"></span>
         <span class="panel-dot yellow"></span>
@@ -328,6 +328,22 @@
     <span class="sb-sep">|</span>
     <span class="sb-item sb-right"><span class="sb-key">SOURCE</span> <span class="sb-val">OPENSKY NETWORK + AVIATIONSTACK</span></span>
   </footer>
+
+  <!-- Mobile Tab Navigation -->
+  <nav class="mobile-tabs-nav" aria-label="Mobile navigation tabs">
+    <button class="m-tab-btn active" data-target="left">
+      <span class="m-tab-icon">📥</span>
+      <span class="m-tab-text">INPUT</span>
+    </button>
+    <button class="m-tab-btn" data-target="right">
+      <span class="m-tab-icon">📡</span>
+      <span class="m-tab-text">RADAR</span>
+    </button>
+    <button class="m-tab-btn" data-target="aux">
+      <span class="m-tab-icon">⚙️</span>
+      <span class="m-tab-text">SETTINGS</span>
+    </button>
+  </nav>
 
   <script src="app.js"></script>
 </body>
