@@ -1089,7 +1089,8 @@ body {
 }
 
 @media (max-width: 900px) {
-  html, body {
+  /* Only lock screen/height on actual cellphones/mobile devices */
+  body.mobile-device, html:has(body.mobile-device) {
     height: 100%;
     overflow: hidden;
   }
@@ -1120,8 +1121,8 @@ body {
     gap: 4px;
   }
 
-  /* Workspace fills the remaining center area */
-  .workspace {
+  /* Workspace fills the remaining center area on mobile device only */
+  body.mobile-device .workspace {
     display: block;
     flex: 1;
     height: calc(100% - var(--topbar-h) - var(--statusbar-h) - 56px);
@@ -1130,8 +1131,8 @@ body {
     width: 100vw;
   }
 
-  /* Lock all panels as full screen, showing only the active tab */
-  .panel {
+  /* Lock all panels as full screen, showing only the active tab on mobile device only */
+  body.mobile-device .panel {
     display: none !important;
     width: 100% !important;
     height: 100% !important;
@@ -1140,16 +1141,16 @@ body {
     border-left: none !important;
   }
 
-  .panel.active {
+  body.mobile-device .panel.active {
     display: flex !important;
   }
 
-  .panel-aux {
+  body.mobile-device .panel-aux {
     background: var(--bg-panel);
   }
 
-  /* Bottom Tab Navigation Bar */
-  .mobile-tabs-nav {
+  /* Bottom Tab Navigation Bar on mobile device only */
+  body.mobile-device .mobile-tabs-nav {
     display: flex;
     height: 56px;
     background: var(--bg-header);
@@ -1158,7 +1159,7 @@ body {
     z-index: 100;
   }
 
-  .m-tab-btn {
+  body.mobile-device .m-tab-btn {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1176,20 +1177,65 @@ body {
     padding: 4px 0;
   }
 
-  .m-tab-btn:hover {
+  body.mobile-device .m-tab-btn:hover {
     background: rgba(255, 45, 107, 0.03);
   }
 
-  .m-tab-btn.active {
+  body.mobile-device .m-tab-btn.active {
     color: var(--ruby-bright);
     background: rgba(255, 45, 107, 0.05);
     border-bottom: 2px solid var(--ruby-bright);
     text-shadow: 0 0 8px var(--ruby-mid);
   }
 
-  .m-tab-icon {
+  body.mobile-device .m-tab-icon {
     font-size: 16px;
     margin-bottom: 2px;
+  }
+
+  /* Desktop/Web Browser layout: stack all three panels vertically and allow overall page scrolling */
+  body:not(.mobile-device) {
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  html:has(body:not(.mobile-device)) {
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  body:not(.mobile-device) .workspace {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  body:not(.mobile-device) .panel {
+    display: flex !important; /* Keep all three visible simultaneously */
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    border-right: none !important;
+    border-left: none !important;
+    border-bottom: 1px solid var(--ruby-border) !important;
+    overflow: visible;
+  }
+  body:not(.mobile-device) .panel-left .terminal-body {
+    height: 400px !important;
+    overflow-y: auto !important;
+  }
+  body:not(.mobile-device) .panel-right .output-body {
+    height: 450px !important;
+    overflow: hidden !important; /* Maintain terminal stream absolute sizing */
+  }
+  body:not(.mobile-device) .panel-aux .aux-body {
+    height: 400px !important;
+    overflow-y: auto !important;
+  }
+  body:not(.mobile-device) .mobile-tabs-nav {
+    display: none !important;
   }
 
   /* Scale neon box to prevent clipping in input screen */

@@ -6,6 +6,13 @@
 
 'use strict';
 
+// Detect if mobile/cellphone device to separate browser and mobile behavior
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+if (isMobileDevice) {
+  document.body.classList.add('mobile-device');
+}
+
 /* ══════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════ */
@@ -957,8 +964,8 @@ async function trackFlight(rawInput) {
   const cleaned = rawInput.trim();
   if (!cleaned || state.isLoading) return;
 
-  // Auto-switch mobile tab to RADAR output panel
-  if (typeof window.switchMobileTab === 'function') {
+  // Auto-switch mobile tab to RADAR output panel on mobile devices
+  if (document.body.classList.contains('mobile-device') && typeof window.switchMobileTab === 'function') {
     window.switchMobileTab('right');
   }
 
@@ -1610,6 +1617,8 @@ animateRadarSweep();
    MOBILE TABS CONTROLLER
    ══════════════════════════════════════════════ */
 function setupMobileTabs() {
+  if (!document.body.classList.contains('mobile-device')) return;
+
   const tabBtns = document.querySelectorAll('.m-tab-btn');
   const panels = {
     left: document.querySelector('.panel-left'),
@@ -1671,6 +1680,8 @@ if (document.readyState === 'loading') {
    ══════════════════════════════════════════════ */
 // Pulling down to 12 parsecs, Chewie! 🚀 Millennium Falcon speed refresh activated.
 function setupPullToRefresh() {
+  if (!document.body.classList.contains('mobile-device')) return;
+
   const container = document.body;
   const indicator = $('pull-refresh-indicator');
   const icon = indicator ? indicator.querySelector('.pull-refresh-icon') : null;
