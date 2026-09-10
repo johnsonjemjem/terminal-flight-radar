@@ -10,6 +10,8 @@ A retro-futuristic, terminal-style real-time flight tracking dashboard. Track li
 ---
 
 ## 📸 Demo
+<img width="1911" height="987" alt="Screenshot 2026-09-10 at 22 11 57" src="https://github.com/user-attachments/assets/688dce44-a85d-4edd-816a-15223ceb5d07" />
+
 *Include a screenshot of your dashboard here!*
 
 ---
