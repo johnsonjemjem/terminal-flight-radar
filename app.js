@@ -11,6 +11,10 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
 
 if (isMobileDevice) {
   document.body.classList.add('mobile-device');
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'mobile.css?v=2';
+  document.head.appendChild(link);
 }
 
 /* ══════════════════════════════════════════════
@@ -178,14 +182,37 @@ const decodeStatus = (onGround, velocity) =>
 /* ══════════════════════════════════════════════
    APIS (OPENSKY & AVIATIONSTACK)
 ══════════════════════════════════════════════ */
+const IATA_TO_ICAO_AIRLINE = {
+  AA:'AAL', UA:'UAL', DL:'DAL', WN:'SWA', B6:'JBU', AS:'ASA', NK:'NKS', F9:'FFT', HA:'HAL',
+  BA:'BAW', LH:'DLH', AF:'AFR', KL:'KLM', EK:'UAE', QR:'QTR', SQ:'SIA', NH:'ANA', JL:'JAL', KE:'KAL',
+  CX:'CPA', QF:'QFA', AC:'ACA', AM:'AMX',
+};
+
+function convertToIcaoCallsign(flightInput) {
+  const clean = flightInput.toUpperCase().replace(/\s+/g, '');
+  const match = clean.match(/^([A-Z]{2,3})(\d+)$/);
+  if (match) {
+    const airline = match[1];
+    const num = match[2];
+    if (airline.length === 2) {
+      const icao = IATA_TO_ICAO_AIRLINE[airline] || airline;
+      return icao + num;
+    }
+  }
+  return clean;
+}
+
 async function fetchOpenSky(callsign) {
-  const url = `https://opensky-network.org/api/states/all?callsign=${encodeURIComponent(callsign.padEnd(8))}`;
+  const url = `https://opensky-network.org/api/states/all`;
   const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
   if (!res.ok) throw new Error(`OpenSky HTTP ${res.status}`);
   const data = await res.json();
   if (!data.states || data.states.length === 0) return null;
 
-  const sv = data.states[0];
+  const targetCs = convertToIcaoCallsign(callsign);
+  const sv = data.states.find(s => (s[1] || '').trim().toUpperCase() === targetCs);
+  if (!sv) return null;
+
   return {
     icao24:       sv[0],
     callsign:     (sv[1] || '').trim(),
@@ -225,9 +252,17 @@ const _JFK = { iata_code: 'JFK', icao_code: 'KJFK', name: 'John F. Kennedy Inter
 const _LAX = { iata_code: 'LAX', icao_code: 'KLAX', name: 'Los Angeles International Airport', municipality: 'Los Angeles', country_name: 'United States', latitude: 33.94250, longitude: -118.40806 };
 const _DFW = { iata_code: 'DFW', icao_code: 'KDFW', name: 'Dallas/Fort Worth International Airport', municipality: 'Dallas-Fort Worth', country_name: 'United States', latitude: 32.89700, longitude: -97.03800 };
 const _ORD = { iata_code: 'ORD', icao_code: 'KORD', name: "O'Hare International Airport", municipality: 'Chicago', country_name: 'United States', latitude: 41.97960, longitude: -87.90480 };
+const _EWR = { iata_code: 'EWR', icao_code: 'KEWR', name: 'Newark Liberty International Airport', municipality: 'Newark/New York', country_name: 'United States', latitude: 40.69250, longitude: -74.16861 };
+const _SFO = { iata_code: 'SFO', icao_code: 'KSFO', name: 'San Francisco International Airport', municipality: 'San Francisco', country_name: 'United States', latitude: 37.61889, longitude: -122.37500 };
+const _SEA = { iata_code: 'SEA', icao_code: 'KSEA', name: 'Seattle-Tacoma International Airport', municipality: 'Seattle', country_name: 'United States', latitude: 47.44900, longitude: -122.30900 };
+const _ANC = { iata_code: 'ANC', icao_code: 'PANC', name: 'Ted Stevens Anchorage International Airport', municipality: 'Anchorage', country_name: 'United States', latitude: 61.17440, longitude: -150.00700 };
+
 const _AA  = { name: 'American Airlines', iata: 'AA', icao: 'AAL' };
+const _UA  = { name: 'United Airlines', iata: 'UA', icao: 'UAL' };
+const _AS  = { name: 'Alaska Airlines', iata: 'AS', icao: 'ASA' };
 
 const KNOWN_ROUTES = {
+  // American Airlines Routes
   AA169:  { airline: _AA, origin: _LAX, destination: _HND, durationHours: 11.917, schedDepUTCH:  7, schedDepUTCM: 50, schedArrUTCH: 19, schedArrUTCM: 45 },
   AA170:  { airline: _AA, origin: _HND, destination: _LAX, durationHours: 10.083, schedDepUTCH:  2, schedDepUTCM: 55, schedArrUTCH: 13, schedArrUTCM:  0 },
   AA175:  { airline: _AA, origin: _DFW, destination: _HND, durationHours: 13.083, schedDepUTCH: 16, schedDepUTCM: 15, schedArrUTCH:  5, schedArrUTCM: 20 },
@@ -240,6 +275,22 @@ const KNOWN_ROUTES = {
   AA9600: { airline: _AA, origin: _HND, destination: _LAX, durationHours: 10.083, schedDepUTCH: 13, schedDepUTCM:  0, schedArrUTCH: 23, schedArrUTCM:  0 },
   AA61:   { airline: _AA, origin: _DFW, destination: _NRT, durationHours: 13.5,   schedDepUTCH: 15, schedDepUTCM: 30, schedArrUTCH:  5, schedArrUTCM:  7 },
   AA60:   { airline: _AA, origin: _NRT, destination: _DFW, durationHours: 12.0,   schedDepUTCH:  9, schedDepUTCM: 30, schedArrUTCH: 21, schedArrUTCM: 30 },
+
+  // United Airlines Routes
+  UA79:   { airline: _UA, origin: _EWR, destination: _HND, durationHours: 14.0,   schedDepUTCH: 14, schedDepUTCM: 0,  schedArrUTCH: 4,  schedArrUTCM: 0 },
+  UA78:   { airline: _UA, origin: _HND, destination: _EWR, durationHours: 13.0,   schedDepUTCH: 8,  schedDepUTCM: 55, schedArrUTCH: 21, schedArrUTCM: 55 },
+  UA837:  { airline: _UA, origin: _SFO, destination: _HND, durationHours: 11.25,  schedDepUTCH: 18, schedDepUTCM: 45, schedArrUTCH: 6,  schedArrUTCM: 0 },
+  UA838:  { airline: _UA, origin: _HND, destination: _SFO, durationHours: 10.25,  schedDepUTCH: 7,  schedDepUTCM: 30, schedArrUTCH: 17, schedArrUTCM: 45 },
+  UA32:   { airline: _UA, origin: _LAX, destination: _HND, durationHours: 11.5,   schedDepUTCH: 17, schedDepUTCM: 50, schedArrUTCH: 5,  schedArrUTCM: 20 },
+  UA33:   { airline: _UA, origin: _HND, destination: _LAX, durationHours: 10.5,   schedDepUTCH: 3,  schedDepUTCM: 45, schedArrUTCH: 14, schedArrUTCM: 15 },
+
+  // Alaska Airlines Routes
+  AS121:  { airline: _AS, origin: _SEA, destination: _ANC, durationHours: 3.5,    schedDepUTCH: 15, schedDepUTCM: 30, schedArrUTCH: 19, schedArrUTCM: 0 },
+  AS122:  { airline: _AS, origin: _ANC, destination: _SEA, durationHours: 3.25,   schedDepUTCH: 20, schedDepUTCM: 0,  schedArrUTCH: 23, schedArrUTCM: 15 },
+  AS208:  { airline: _AS, origin: _SEA, destination: _LAX, durationHours: 2.75,   schedDepUTCH: 12, schedDepUTCM: 0,  schedArrUTCH: 14, schedArrUTCM: 45 },
+  AS209:  { airline: _AS, origin: _LAX, destination: _SEA, durationHours: 2.85,   schedDepUTCH: 16, schedDepUTCM: 30, schedArrUTCH: 19, schedArrUTCM: 20 },
+  AS302:  { airline: _AS, origin: _SEA, destination: _SFO, durationHours: 2.1,    schedDepUTCH: 14, schedDepUTCM: 15, schedArrUTCH: 16, schedArrUTCM: 21 },
+  AS303:  { airline: _AS, origin: _SFO, destination: _SEA, durationHours: 2.2,    schedDepUTCH: 18, schedDepUTCM: 0,  schedArrUTCH: 20, schedArrUTCM: 20 },
 };
 
 function calcScheduledTimes(routeData) {
@@ -313,12 +364,6 @@ function getRoutingStatus(btnFlight) {
   }
 }
 
-const IATA_TO_ICAO_AIRLINE = {
-  AA:'AAL', UA:'UAL', DL:'DAL', WN:'SWA', B6:'JBU', AS:'ASA', NK:'NKS', F9:'FFT', HA:'HAL',
-  BA:'BAW', LH:'DLH', AF:'AFR', KL:'KLM', EK:'UAE', QR:'QTR', SQ:'SIA', NH:'ANA', JL:'JAL', KE:'KAL',
-  CX:'CPA', QF:'QFA', AC:'ACA', AM:'AMX',
-};
-
 async function fetchOpenSkyDeparture(iataCallsign, originIcaoAirport) {
   if (!originIcaoAirport) return null;
   try {
@@ -330,9 +375,7 @@ async function fetchOpenSkyDeparture(iataCallsign, originIcaoAirport) {
     const data  = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
 
-    const iata      = iataCallsign.match(/^([A-Z]{2})/)?.[1] || '';
-    const flightNum = iataCallsign.replace(/^[A-Z]{2}/, '');
-    const icaoCs    = (IATA_TO_ICAO_AIRLINE[iata] || iata) + flightNum;
+    const icaoCs = convertToIcaoCallsign(iataCallsign);
 
     return data.find(f => f.callsign && f.callsign.trim() === icaoCs) || null;
   } catch { return null; }
