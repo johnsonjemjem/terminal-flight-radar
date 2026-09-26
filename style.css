@@ -325,7 +325,7 @@ body {
 .btn-primary {
   background: var(--ruby-dim);
   border-color: var(--ruby-mid);
-  color: #fff;
+  color: #a2a2a2;
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--ruby-mid);
@@ -1085,5 +1085,3 @@ body {
 .mobile-tabs-nav, #pull-refresh-indicator {
   display: none;
 }
-
-
